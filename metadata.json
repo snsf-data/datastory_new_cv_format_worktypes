@@ -1,0 +1,25 @@
+[
+  {
+    "title_en": "Our new CV format: How is it used by researchers?",
+    "title_de": "Neues CV-Format des SNF: Wie wird es von den Forschenden genutzt?",
+    "title_fr": "Nouveau CV : qu’en est-il dans la pratique ?",
+    "author_en": "Greta Kaufeld, Strategy Processes, SNSF;Julia Jerke, Data Team, SNSF",
+    "author_de": "Greta Kaufeld, Strategieprozesse, SNF;Julia Jerke, Data Team, SNF",
+    "author_fr": "Greta Kaufeld, Processus stratégiques, FNS;Julia Jerke, Data Team, FNS",
+    "datastory_category": "standard",
+    "publication_date_en": "2024-11-28 04:00:00",
+    "publication_date_de": "2024-11-28 04:00:00",
+    "publication_date_fr": "2024-11-28 04:00:00",
+    "languages": "en;de;fr",
+    "short_desc_en": "The SNSF’s new standardised CV format allows grant applicants to highlight a diverse range of work types and achievements. How is the research community using the new format in practice?",
+    "short_desc_de": "Mit dem neuen, standardisierten Lebenslauf können Gesuchstellende ein breites Spektrum von wissenschaftlichen Leistungen und Arbeitsbeispielen erfassen. Unsere Analyse zeigt, wie die Forschungsgemeinschaft diese Möglichkeit in der Praxis nutzt.",
+    "short_desc_fr": "Le nouveau format de CV standardisé du FNS permet aux requérant·es de mettre en relief divers types de travaux et de réalisations. Comment la communauté scientifique s’en sert-elle dans la pratique ?",
+    "tags": "T40T,T70T,T160T,T250T",
+    "top_story": "false",
+    "github_url": "https://github.com/snsf-data/datastory_new_cv_format_worktypes",
+    "doi": "https://doi.org/10.46446/datastory.new-cv-format-worktypes",
+    "name_en": "new-cv-format-worktypes",
+    "name_de": "neuer-cv-forschungsarbeiten",
+    "name_fr": "nouveau-cv-types-de-travaux"
+  }
+]

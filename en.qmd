@@ -1,0 +1,303 @@
+---
+title: "`r params$title`"
+format:
+  html:
+    toc: false
+    css: ["style.css"]
+    mainfont: Theinhardt
+    fontsize: "16px"
+    embed-resources: true
+    page-layout: custom
+    link-external-newwindow: true
+    footnotes-hover: true
+    fig-align: center
+    fig-format: retina
+    fig-dpi: 300
+language:
+  section-title-footnotes: "Footnotes"
+params:
+  title: "Our new CV format: How is it used by researchers?"
+  lead: "The SNSF’s new standardised CV format allows grant applicants to highlight a diverse range of work types and achievements. How is the research community using the new format in practice?"
+  publication_date: "2024-11-28 04:00:00"
+  lang: en
+  use_theinhardt: false
+  reg_font_path: ""
+  bold_font_path: ""
+  it_font_path: ""
+  boldit_font_path: ""
+  doi_url: "https://doi.org/10.46446/datastory.new-cv-format-worktypes"
+  github_url: "https://github.com/snsf-data/datastory_new_cv_format_worktypes"
+execute:
+  echo: false
+  warning: false
+  message: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r general-setup}
+#| include: false
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(conflicted)
+library(here)
+library(showtext)
+library(systemfonts)
+library(waffle)
+library(cowplot)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("get_datastory_theme", "snf.datastory")
+conflict_prefer("get_datastory_scheme", "snf.datastory")
+
+source("R/read_and_prepare_data.R")
+source("R/make_figures.R")
+source("R/translations.R")
+
+# Need if we want to use the registered font in ggiraph plots
+showtext_auto()
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 300 * 2)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale(
+  "LC_TIME",
+  switch(
+    params$lang,
+    en = "English",
+    de = "German",
+    fr = "French"
+  )
+)
+
+# Create function to print number with local language-specific format
+print_num <- function(x) snf.datastory::print_num(x, lang = params$lang)
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline = function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+
+```
+
+```{r print-header-infos}
+#| results: asis
+
+# Add publication date to header
+cat(format(as.Date(params$publication_date), "%d.%m.%Y"))
+```
+
+**`r params$lead`**
+
+When the SNSF first introduced the new standardized CV format in 2022, our aim was clear: to make the scientific evaluation process fairer and more transparent. In the past, the lack of standardization led to heterogeneity in the format and content of submitted CVs, making it difficult to evaluate them as fairly and as efficiently as desired. Applicants were asked to submit lists of their entire research outputs during the last five years, which likely put a disproportionate focus on their productivity and the quantity of research outputs. Moreover, these extensive output lists often emphasised journal articles, while in reality, the outputs of scientific research are much more diverse (see the “Why do we need new ways of assessing researchers’ track records?” box below).
+
+### The new CV format in brief
+
+The new CV format takes a mixed approach: it combines textual elements with a select number of work examples, allowing researchers to put their work into context and to highlight aspects of their work that are not as visible in more traditional CV formats. When submitting a grant application, researchers are now asked to describe up to three *major achievements* and to illustrate these achievements with up to 10 *scientific works*. Importantly, these works are not limited to publications. They include a much more diverse range of different *work types*, such as newspaper articles, patents, data sets and artistic performances.
+
+::: plot-box
+<div class="plot-title">How the new CV differs</div>
+```{r plot-desktop-1}
+#| out-width: "100%"
+#| fig-height: 3
+
+make_figure_1()
+
+```
+:::
+
+### Assessing how applicants use the new CV format
+
+This data story is the start of a multi-part series exploring the contents of the SNSF’s new standardized CVs. In this first part, we will take a closer look at the different *work types* that researchers used in the CVs. This analysis considers 12,655 CVs submitted to the SNSF’s main funding schemes from October 2022 to July 2024 (see the “What data did we use?” box below for details). It includes CVs from all research domains: Social Sciences and Humanities (SSH); Mathematics, Informatics, Natural sciences, and Technology (MINT); Life Sciences (LS); and Interdisciplinary research (ID)[^2].
+
+[^2]: Up until April 2023, ID proposals were submitted to the funding scheme Sinergia. As of June 2023, Sinergia has been [integrated into project funding](https://www.snf.ch/en/sEF1Lm4CUyA7qjR7/news/project-funding-collaborative-and-interdisciplinary-projects-growing-in-importance), and ID projects are evaluated by interdisciplinary panels. For the purpose of this Data Story, ID therefore includes all Sinergia proposals as well as all project funding proposals that were submitted after June 2023 and evaluated by an interdisciplinary panel. Interdisciplinary research is also supported by many other funding schemes at the SNSF, but in this data story these proposals are classified by their main disciplines as defined by their applicants.
+
+### Applicants list a maximum of achievements and work examples
+
+The narrative CV is structured in a way that allows grant applicants to describe one to three *major achievements* and to underline these achievements with a total of up to 10 *work examples*. Across all research domains, there seems to be a trend to make maximal use of this format: The majority of CVs contained entries for all three major achievements (SSH: 86.7%, MINT: 87.9%, LS: 82.5%, ID: 88.1%) and all ten work examples (SSH: 59.1%, MINT: 58.3%, LS: 62%, ID: 74.5%).
+
+::: plot-box
+<div class="plot-title">Number of work examples per CV</div>
+```{r plot-desktop-2}
+#| out-width: "100%"
+#| fig-height: 3.75
+
+make_figure_2()
+
+```
+:::
+
+### Diverse work types, but publications are still the most popular
+
+When completing their CVs, grant applicants can import work examples directly from their [ORCID](https://orcid.org/) profiles. To allow easy integration from ORCID, the classification of work examples in the new CV format reflects the [work types supported by ORCID](https://info.orcid.org/ufaqs/what-work-types-does-orcid-support/). In total, there are 45 different *work types*, which are organised into four *categories*[^3].
+
+[^3]: The Publication *work category* is fairly broad according to the ORCID classification; see section “Different research domains make use of different Publication types” below.
+
+::: plot-box
+<div class="plot-title">Work types in the ORCID classification</div>
+```{r plot-desktop-3}
+#| out-width: "100%"
+#| fig-height: 3
+
+make_figure_3()
+
+```
+::: caption
+The ORCID classification structures/organises work types into four categories: Publication, Conference, Intellectual Property, and Other. Each category further contains several different work types (e.g. the Publication category contains the work types “Preprint” and “Book”).
+:::
+:::
+
+While some researchers chose to stick to just one work type throughout their entire CV (39.6%), many CVs included a range of diverse outputs. A few even used 7 or more different work types (n = 106 out of the total data set of 12,655).
+
+Looking at the distribution of different *work *categories, Publications are by far the most prevalent in all research domains. They make up 89.6% of works listed in CVs in SSH, 87% in MINT, 96% in LS, and 92.5% in ID. This is followed by Conference contributions, which are particularly widely used in MINT, accounting for 9.9% of their works (SSH: 5.9%; LS: 1.9%; ID: 5.4%). Intellectual Property and the category Other are much less common (0.6% and 2.5% across all research domains, respectively).
+
+::: plot-box
+<div class="plot-title">Percentage of Work categories by research domain</div>
+```{r plot-desktop-4}
+#| out-width: "100%"
+#| fig-height: 4.75
+
+make_figure_4()
+
+```
+:::
+
+### Different research domains make use of different Publication types
+
+To get a better understanding of the Publication category, we wanted to take a closer look at the specific types of publications that were mentioned most often in the CVs. The Publication category according to ORCID is fairly broad: It includes Journal Articles, Book Reviews, Manuals and Encyclopaedia Entries, among others. To simplify the figure, we have grouped these work types into *subcategories*:
+
+- *Journal*: Journal Articles, Journal Issues
+- *Book*: Books, Chapters, Book Reviews, Edited Books
+- *Dissertation*: Dissertation, Thesis, 
+- *Online*: Online Resource, Website
+- *Training and Supervision*: Test, Supervised Student Publication
+- *Other type of Article*: Magazine Article, Newsletter Article, Review, Working Paper, Report
+- *Textual Tool*: Manual, Research Tool, Translation, Dictionary and Encyclopaedia Entries
+- *Preprint*
+
+::: plot-box
+<div class="plot-title">Work types within the Publication category by research domain</div>
+```{r plot-desktop-5}
+#| out-width: "100%"
+#| fig-height: 6.25
+
+make_figure_5()
+
+```
+:::
+
+When looking at these subcategories of work types within the Publication category, there are some notable research domain-specific differences. While Journal publications are the most prevalent type of work in all research domains, they make up a smaller proportion of publications in SSH (60%) relative to the other research domains (MINT: 89.4%; LS: 93.3%; ID: 89.7%). In contrast, book publications were listed more frequently in CVs from the Social Sciences and Humanities than in CVs from other research domains (SSH: 26.5%; MINT: 2.7%; LS: 1.6%; ID: 5.9%). SSH also has a comparatively high proportion of Other types of Article, making up 5.8% of all works in the Publication category. The most widely used types of articles within this subcategory in SSH are Reports (672), Working Papers (499) and Magazine Articles (304). Preprints appear to be more prevalent in MINT (3.2%) and LS (1.9%) compared to SSH (0.9%) and ID (0.9%).
+
+### Conference contributions
+
+In all research domains, Conference contributions are the second most frequently used work category. Conference Papers are the main work type in this category for ID, MINT and SSH, making up more than 73% of total Conference contributions in all of these research domains. For LS, Conference Abstracts are the most commonly used work type (40.8%), but Conference Papers are nearly as frequent (38%). LS is also the research domain in which the biggest proportion of Posters were listed.
+
+::: plot-box
+<div class="plot-title">Work types within the Conference category by research domain</div>
+```{r plot-desktop-6}
+#| out-width: "100%"
+#| fig-height: 5.5
+
+make_figure_6()
+
+```
+:::
+
+### Intellectual Property
+
+Overall, the Intellectual Property category is much less used than the Publication and Conference categories. Within the category, Patents are by far the most prevalent work type, making up at least 90% of the contributions in all research domains. Disclosures, Registered Copyrights, Licenses and Trademarks are very rare in the data set.
+
+::: plot-box
+<div class="plot-title">Work types within the Intellectual Property category by research domain</div>
+```{r plot-desktop-7}
+#| out-width: "100%"
+#| fig-height: 5.5
+
+make_figure_7()
+
+```
+::: caption
+Each waffle square corresponds to one occurrence in the data set.
+:::
+:::
+
+### A closer look at the Other category
+
+Comprising more than 2.5% of the overall data set, contributions designated as Other were the third most prevalent category. This category is very broad as defined by ORCID: It includes work types such as Annotations, Data Sets, Inventions, Artistic Performances, and also a work type that is, itself, named Other. Looking at the distributions of work types within the category, there are some interesting differences between research domains. For example, Software contributions make up a fairly sizeable share of contributions in MINT, while Lectures and Speeches account for a relatively large proportion of contributions in SSH. Not surprisingly, Artistic Performances also appear to be somewhat more prevalent in SSH compared to the other research domains. However, in all research domains, the Other work type is by far the most frequent, making up more than 51.1% of work examples in the Other category overall.
+
+::: plot-box
+<div class="plot-title">Work types within the Other category</div>
+```{r plot-desktop-8}
+#| out-width: "100%"
+#| fig-height: 6
+
+make_figure_8()
+
+```
+:::
+
+What can we make of this Other work type? Preliminary analyses of the corresponding works that were classified as Other reveal a wide range of underlying work types. Some were clearly mislabelled (e.g. a Conference Paper that was classified as Other), while others were indeed not classifiable within the existing system (e.g. an art exhibition; a manuscript in preparation; a knowledge exchange platform; a podcast). Analysing these examples enables us to understand the true breadth of research outputs.
+
+### Putting the DORA declaration into practice with the new CV format
+
+This year, 2024, marks the 10-year anniversary of the SNSF signing the DORA declaration. The new CV format is one step that the SNSF has taken to make the assessment of applicants' research careers fairer and more transparent and to enable its research assessment to recognise the broad range of possible research outputs. Overall, our data suggest that researchers make use of these possibilities. In total, 3724 CVs (29% of all CVs) reference at least one other work category than Publications. Grant applicants also use the Other work category to highlight a wide variety of research outputs, which the SNSF intends to monitor with great interest. The SNSF values diverse work types as an important aspect of making research assessment as fair and transparent as possible.
+
+::: info-box
+
+### Why do we need new ways of assessing researchers’ track records?
+
+The SNSF’s [mandate](https://www.fedlex.admin.ch/eli/cc/2013/786/en) is to fund “[excellent research projects](https://www.snf.ch/en/tf8nnJBdUJPCYODl/topic/the-snsfs-model-of-excellence)” – but deciding which research is “excellent” is far from trivial. Is it the project whose applicant has the most prolific track record and the biggest international network? Or the one with the most innovative ideas? Or maybe the one which has the potential to have a positive impact on society?
+
+Indicators such as citation counts, h-indices and journal impact factors are sometimes used to quantify a researcher’s “productivity” and “impact”. However, relying exclusively on these types of quantitative indicators can perpetuate a narrow understanding of research success and excellence, and it falls short of valuing other important aspects of research work. This may lead to misguided incentives and disadvantage certain researcher groups (for example, researchers in the early stages of their careers or with non-traditional careers).
+
+In 2012, the [Declaration of Research Assessment (DORA)](https://sfdora.org/read) acknowledged the need for better practices in research assessment, calling for funding agencies to “consider the value and impact of all research outputs […] in addition to research publications.” As one of its signatories, the SNSF has been committed to this goal since 2014. [The new CV format was first piloted and assessed](https://www.biorxiv.org/content/10.1101/2022.03.16.484596v1.full.pdf) in the evaluation of Project funding applications in Life Sciences in 2020, and then [incrementally rolled out to other funding schemes starting in 2022](https://www.snf.ch/en/wBR6E3emu8PP1ZSY/news/a-new-cv).
+
+:::
+
+::: info-box
+
+### What data did we use?
+
+For this Data Story, we analysed 12,655 standardized CVs from 9808 main and co-applicants (37.6% female, 62.1% male, 0.4% non-binary). The analyses include applications submitted to numerous funding schemes across Project funding, Careers, Programmes and Science communication, between October 2022 and July 2024.  31.4% of the CVs were submitted to SSH, 27.1% to MINT, 31.5% to LS, and 10% to ID. Six CVs were excluded from the analysis because of data inconsistencies. Note that some researchers submitted multiple proposals with a distinct CV for each proposal (a total of 2216 applicants had two or more CVs), while others reused the same CV for multiple applications (a total of 175 CVs were used for more than one application), so there are more CVs than applicants in the data set.
+
+:::
+
+Data, text and code of this data story are [available on Github](`r params$github_url`) and [archived on Zenodo](`r params$doi_url`).<br>DOI: `r str_remove(params$doi_url, "https://doi.org/")`
+
+```{r prevent-internal-snsf-packages, include=FALSE}
+#| include: false
+
+# Internal SNSF packages must not be used in data stories, as their
+# pre-processing functions are internal and the corporate design differs from
+# the data portal.
+
+internal_pkg <- c("snfverse", "snf.preprocessing", "snf.plot")
+
+if (any(internal_pkg %in% loadedNamespaces())) {
+  stop(glue(
+    "You must not use internal SNSF packages in data stories.",
+    " Please resort to snf.datastory."
+  ))
+}
+```

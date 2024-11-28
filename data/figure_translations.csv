@@ -1,0 +1,57 @@
+Figure,en,de,fr
+2,Number of CVs,Anzahl CV,Nombre de CV
+2,Number of work examples,Anzahl Arbeitsbeispiele,Nombre de travaux de référence
+4,Publication,Publikation,Publications
+4,Conference,Konferenz,Conférences
+4,Intellectual Property,Geistiges Eigentum,Propriété intellectuelle
+4,Other,Sonstige,Autre
+4,SSH,GSW,SHS
+4,MINT,MINT,MINT
+4,LS,LW,SV
+4,ID,ID,RI
+5,Journal,Wissenschaftliche Zeitschrift,Revues
+5,Book,Buch,Livre
+5,Other type of Article,Andere Art von Artikel,Autres types d'article
+5,Preprint,Preprint,Prépublication
+5,Online,Online,En ligne
+5,Dissertation,Dissertation,Dissertation
+5,Training and Supervision,Ausbildung und Betreuung,Formation et supervision
+5,Textual Tool,Text-Programm,Outils textuels
+5,SSH,GSW,SHS
+5,MINT,MINT,MINT
+5,LS,LW,SV
+5,ID,ID,RI
+6,Conference Paper,Konferenz-Artikel,Article
+6,Conference Abstract,Konferenz-Abstract,Résumé
+6,Conference Poster,Konferenz-Poster,Poster
+6,SSH,GSW,SHS
+6,MINT,MINT,MINT
+6,LS,LW,SV
+6,ID,ID,RI
+7,Patent,Patent,Brevet
+7,Disclosure,Patentanmeldung,Divulgation
+7,Registered Copyright,Urheberrechtsschutz,Droits d'auteurs enregistrés
+7,License,Lizenz,Licence
+7,Trademark,Marke,Marque déposée
+7,SSH,GSW,SHS
+7,MINT,MINT,MINT
+7,LS,LW,SV
+7,ID,ID,RI
+8,"All types ""Other""",Alle Arbeitsarten « Sonstige »,Tous les types « Autre »
+8,Technical Standard,Technischer Standard,Norme technique
+8,Annotation,Kommentar,Annotation
+8,Artistic Performance,Künstlerische Darbietung,Performance artistique
+8,Data Management Plan,Datenmanagementplan,Plan de gestion des données
+8,Data Set,Datensatz,Ensemble de données
+8,Invention,Erfindung,Invention
+8,Lecture/Speech,Vorlesung/Referat,Conférence/exposé
+8,Physical Object,Physisches Objekt,Objet physique
+8,Research Technique,Forschungstechnik,Techniques de recherche
+8,Software,Software,Logiciel
+8,Spin-off Company,Spin-off-Firma,Entreprise dérivée (spin-off)
+8,Standards and Policy,Standards und Konzepte,Normes et directive
+8,Other,Sonstige,Autre
+8,SSH,GSW,SHS
+8,MINT,MINT,MINT
+8,LS,LW,SV
+8,ID,ID,RI

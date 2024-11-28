@@ -1,0 +1,321 @@
+---
+title: "`r params$title`"
+format:
+  html:
+    toc: false
+    css: ["style.css"]
+    mainfont: Theinhardt
+    fontsize: "16px"
+    embed-resources: true
+    page-layout: custom
+    link-external-newwindow: true
+    footnotes-hover: true
+    fig-align: center
+    fig-format: retina
+    fig-dpi: 300
+language:
+  section-title-footnotes: "Fussnoten"
+params:
+  title: "Neues CV-Format des SNF: Wie wird es von den Forschenden genutzt?"
+  lead: "Mit dem neuen, standardisierten Lebenslauf können Gesuchstellende ein breites Spektrum von wissenschaftlichen Leistungen und Arbeitsbeispielen erfassen. Unsere Analyse zeigt, wie die Forschungsgemeinschaft diese Möglichkeit in der Praxis nutzt."
+  publication_date: "2024-11-28 04:00:00"
+  lang: de
+  use_theinhardt: false
+  reg_font_path: ""
+  bold_font_path: ""
+  it_font_path: ""
+  boldit_font_path: ""
+  doi_url: "https://doi.org/10.46446/datastory.new-cv-format-worktypes"
+  github_url: "https://github.com/snsf-data/datastory_new_cv_format_worktypes"
+execute:
+  echo: false
+  warning: false
+  message: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r general-setup}
+#| include: false
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(conflicted)
+library(here)
+library(showtext)
+library(systemfonts)
+library(waffle)
+library(cowplot)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("get_datastory_theme", "snf.datastory")
+conflict_prefer("get_datastory_scheme", "snf.datastory")
+
+source("R/read_and_prepare_data.R")
+source("R/make_figures.R")
+source("R/translations.R")
+
+# Need if we want to use the registered font in ggiraph plots
+showtext_auto()
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 300 * 2)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale(
+  "LC_TIME",
+  switch(
+    params$lang,
+    en = "English",
+    de = "German",
+    fr = "French"
+  )
+)
+
+# Create function to print number with local language-specific format
+print_num <- function(x) snf.datastory::print_num(x, lang = params$lang)
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline = function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+
+```
+
+```{r print-header-infos}
+#| results: asis
+
+# Add publication date to header
+cat(format(as.Date(params$publication_date), "%d.%m.%Y"))
+```
+
+**`r params$lead`**
+
+Der SNF führte 2022 ein standardisiertes CV-Format mit dem Ziel ein, das wissenschaftliche Evaluationsverfahren fairer und transparenter zu gestalten. Vorher hatte die fehlende Standardisierung zur Folge, dass die eingereichten Lebensläufe in Form und Inhalt sehr uneinheitlich waren. Dies erschwerte eine faire und effiziente Bewertung.
+
+Die Gesuchstellenden verfassten damals eine vollständige Liste ihrer Forschungspublikationen. Dadurch bestand die Gefahr, dass die Produktivität und Quantität ihrer Forschungstätigkeit unverhältnismässig stark gewichtet wurde. 
+
+Die umfangreichen Listen legten zudem den Schwerpunkt häufig auf wissenschaftliche Artikel. In der Realität sind die Ergebnisse wissenschaftlicher Forschung wesentlich vielfältiger (siehe Kasten «Weshalb sind neue Methoden zur Beurteilung der wissenschaftlichen Leistung notwendig?»).
+
+### Das neue CV-Format im Überblick
+
+Das neue CV-Format kombiniert narrative Elemente mit Beispielen von Forschungsarbeiten. Damit können die Gesuchstellenden ihre Tätigkeit in einen Kontext setzen und Aspekte ihrer Arbeit aufzeigen, die in traditionellen Lebensläufen weniger sichtbar sind.
+
+Mit dem neuen Format werden die Gesuchstellenden aufgefordert, bis zu drei bedeutende Leistungen zu beschreiben und diese mit bis zu zehn Forschungsarbeiten zu belegen. Wichtig dabei: Die Arbeiten beschränken sich nicht auf Publikationen. Der SNF anerkennt ein wesentlich breiteres Spektrum von Arbeiten, wie Zeitungsartikel, Patente, Datensätze oder künstlerische Darbietungen.
+
+::: plot-box
+<div class="plot-title">Das hat sich geändert</div>
+```{r plot-desktop-1}
+#| out-width: "100%"
+#| fig-height: 3
+
+make_figure_1()
+
+```
+:::
+
+### Nutzung des CV durch die Gesuchstellenden
+
+Diese Datengeschichte bildet den Auftakt zu einer mehrteiligen Serie über die Verwendung des neuen, standardisierten Lebenslaufs des SNF. In einem ersten Teil werfen wir einen genaueren Blick auf die verschiedenen *Forschungsarbeiten*, die Gesuchstellende in ihrem CV aufführen. 
+
+In dieser Analyse werden 12 655 Lebensläufe berücksichtigt, die zwischen Oktober 2022 und Juli 2024 bei den wichtigsten Förderinstrumenten des SNF eingereicht wurden (siehe Kasten «Welche Daten wurden verwendet?»). Die Lebensläufe stammen aus allen Forschungsbereichen: Geistes- und Sozialwissenschaften (GSW); Mathematik, Informatik, Naturwissenschaften und Technik (MINT); Lebenswissenschaften (LW); Interdisziplinäre Forschung (ID)[^2].
+
+[^2]: Bis April 2023 wurden ID-Gesuche beim Förderinstrument Sinergia eingereicht. Im Juni 2023 integrierte der SNF Sinergia in die [Projektförderung](https://www.snf.ch/de/sEF1Lm4CUyA7qjR7/news/projektfoerderung-kollaborative-und-interdisziplinaere-projekte-erhalten-mehr-gewicht), wo die ID-Projekte von interdisziplinären Gremien evaluiert werden. In dieser Datengeschichte umfasst der Bereich ID daher alle Sinergia-Gesuche sowie alle Gesuche im Rahmen der Projektförderung, die nach Juni 2023 eingereicht und von einem interdisziplinären Gremium bewertet wurden. Interdisziplinäre Forschung wird auch von vielen anderen Förderinstrumenten des SNF unterstützt. In dieser Datengeschichte werden solche Gesuche jedoch der Disziplin zugeordnet, welche die Gesuchstellenden als Hauptdisziplin angegeben haben.
+
+### Maximale Zahl von Leistungen und Forschungsarbeiten
+
+Der narrative Lebenslauf ist so aufgebaut, dass die Gesuchstellenden eine bis drei bedeutende Leistungen beschreiben und diese mit insgesamt bis zu zehn Arbeitsbeispielen veranschaulichen können. In allen Forschungsbereichen scheint dieses Format tendenziell voll ausgeschöpft zu werden: In der grossen Mehrheit der Lebensläufe wurde die maximale Zahl von drei bedeutenden Leistungen aufgeführt (GSW: 86,7%, MINT: 87,9%, LW: 82,5%, ID: 88,1%). Mehrheitlich wurden auch die maximal erlaubten zehn Arbeitsbeispiele genannt (GSW: 59,1%, MINT: 58,3%, LW: 62%, ID: 74,5%).
+
+::: plot-box
+<div class="plot-title">Anzahl Arbeitsbeispiele pro Lebenslauf</div>
+```{r plot-desktop-2}
+#| out-width: "100%"
+#| fig-height: 3.75
+
+make_figure_2()
+
+```
+:::
+
+### Publikationen weiterhin am beliebtesten
+
+Bei der Erfassung ihrer Lebensläufe können Gesuchstellende Arbeitsbeispiele direkt aus ihren [ORCID-Profilen](https://orcid.org/) importieren. Für eine einfache Übernahme orientiert sich die Einteilung der Arbeitsbeispiele im neuen CV-Format an der [Klassifizierung von Forschungsarbeiten gemäss ORCID](https://info.orcid.org/de/ufaqs/what-work-types-does-orcid-support/). Insgesamt gibt es demnach vier Kategorien und 45 Arten von Forschungsarbeiten[^3].
+
+[^3]: Die Kategorie Publikation ist in der ORCID-Klassifizierung relativ weit gefasst (siehe Abschnitt «Unterschiedliche Publikationsarten je nach Forschungsbereich»).
+
+::: plot-box
+<div class="plot-title">Forschungsarbeiten in der ORCID-Klassifikation</div>
+```{r plot-desktop-3}
+#| out-width: "100%"
+#| fig-height: 3
+
+make_figure_3()
+
+```
+::: caption
+Mit der ORCID-Klassifizierung werden Forschungsarbeiten in vier Kategorien eingeteilt: Publikation, Konferenz, Geistiges Eigentum und Sonstige. Jede Kategorie ist wiederum unterteilt in verschiedene Arten von Forschungsarbeiten (z. B. «Preprint» und «Buch» in der Kategorie Publikation). Zur besseren Lesbarkeit wurde die ursprüngliche ORCID-Klassifizierung vom Englischen ins Deutsche übersetzt.
+:::
+:::
+
+Bei einem Teil der Forschenden gehören alle im Lebenslauf erwähnten Arbeitsbeispiele zu derselben Art von Forschungsarbeit (39,6%). In vielen CV wurden jedoch verschiedene Arten von Arbeiten aufgelistet, in einigen sogar sieben oder mehr (n = 106 des gesamten Datensatzes von 12 655).
+
+Eine Analyse der Verteilung auf die Kategorien von Forschungsarbeiten ergibt, dass in allen Forschungsbereichen die Publikationen dominieren. Auf diese Kategorie entfallen 89,6% der aufgeführten Arbeiten der Lebensläufe in den GSW, 87% in MINT, 96% in den LW und 92,5% in der ID. Danach folgt die Kategorie Konferenz. Am stärksten vertreten ist sie in den MINT-Fächern mit einem Anteil von 9,9% der genannten Arbeitsbeispiele (GSW: 5,9%; LW: 1,9%; ID: 5,4%). Arbeitsbeispiele aus den Kategorien Geistiges Eigentum und Sonstige sind viel seltener (0,6% und 2,5% in allen Forschungsbereichen insgesamt).
+
+::: plot-box
+<div class="plot-title">Kategorien der Arbeitsbeispiele nach Forschungsbereich</div>
+```{r plot-desktop-4}
+#| out-width: "100%"
+#| fig-height: 4.75
+
+make_figure_4()
+
+```
+:::
+
+### Unterschiedliche Publikationsarten je nach Forschungsbereich
+
+Für ein detaillierteres Verständnis der Kategorie Publikation betrachteten wir die einzelnen Arten von Publikationen, die in den Lebensläufen am häufigsten genannt wurden. ORCID definiert die Kategorie Publikation relativ breit: Sie beinhaltet unter anderem wissenschaftliche Artikel, Buchrezensionen, Lehrmaterialien und Einträge in Enzyklopädien. Damit die Grafik übersichtlicher wird, haben wir diese Arten von Arbeiten in *Unterkategorien* zusammengefasst:
+
+- *Wissenschaftliche Zeitschrift*: wissenschaftlicher Artikel, Ausgabe einer wissenschaftlichen Zeitschrift
+- *Buch*: Buch, Buchkapitel, Buchrezension, Sammelband
+- *Dissertation*: Dissertation, Abschlussarbeit
+- *Online*: Online-Ressource, Website
+- *Ausbildung und Betreuung*: Prüfungen, betreute studentische Publikation
+- *Andere Art von Artikel*: Zeitschriftenartikel, Newsletter-Artikel, Rezension, Arbeitspapier, Bericht
+- *Text-Programm*: Lehrmaterialien, Recherche-Tool, Übersetzung, Wörterbuch- und Enzyklopädie-Einträge
+- *Preprint*
+
+::: plot-box
+<div class="plot-title">Publikationen: Art der Arbeiten nach Forschungsbereich</div>
+```{r plot-desktop-5}
+#| out-width: "100%"
+#| fig-height: 6.25
+
+make_figure_5()
+
+```
+:::
+
+Bei der Betrachtung dieser Unterkategorien von Arbeiten innerhalb der Kategorie Publikation zeigen sich relevante Unterschiede. Während Artikel in wissenschaftlichen Zeitschriften in allen Forschungsbereichen dominieren, ist dieser Anteil in den GSW (60%) geringer (MINT: 89,4%; LW: 93,3%; ID: 89,7%). 
+
+Dagegen wurden Buchpublikationen bei den Geistes- und Sozialwissenschaften häufiger aufgeführt als in anderen Bereichen (GSW: 26,5%; MINT: 2,7%; LW: 1,6%; ID: 5,9%). In den GSW ist auch der Anteil der Unterkategorie «Andere Art von Artikel» mit 5,8% aller Arbeiten der Kategorie Publikation höher. Am häufigsten wurden dabei in den GSW Berichte (672), Arbeitspapiere (499) und Zeitschriftenartikel (304) genannt. Preprints scheinen in MINT (3,2%) und in den LW (1,9%) weiter verbreitet zu sein als in den GSW (0,9 %) und in der ID (0,9%).
+
+### Konferenzbeiträge
+
+In allen Forschungsbereichen sind Konferenzbeiträge die am zweithäufigsten aufgeführte Kategorie. Konferenz-Artikel sind dabei die häufigste Art von Arbeit für ID, MINT und GSW insgesamt, mit einem Anteil von über 73% aller Konferenzbeiträge. Bei den LW sind Konferenz-Abstracts die am häufigsten genannte Art von Konferenzbeiträgen (40,8%), nur knapp dahinter folgen Konferenz-Artikel (38%). Im Forschungsbereich LW ist auch der Anteil der Poster am höchsten.
+
+::: plot-box
+<div class="plot-title">Konferenzbeiträge: Art der Arbeiten nach Forschungsbereich</div>
+```{r plot-desktop-6}
+#| out-width: "100%"
+#| fig-height: 5.5
+
+make_figure_6()
+
+```
+:::
+
+### Geistiges Eigentum
+
+Insgesamt wird die Kategorie Geistiges Eigentum deutlich seltener aufgeführt als die Kategorien Publikation und Konferenz. Innerhalb der Kategorie wurden Patente mit mindestens 90% in allen Forschungsbereichen klar am häufigsten genannt. Sehr selten erwähnt sind im Datensatz hingegen Patentanmeldungen, der Schutz von Urheberrechten, Lizenzen und Marken.
+
+::: plot-box
+<div class="plot-title">Geistiges Eigentum: Art der Arbeiten nach Forschungsbereich</div>
+```{r plot-desktop-7}
+#| out-width: "100%"
+#| fig-height: 5.5
+
+make_figure_7()
+
+```
+::: caption
+Jedes Quadrat entspricht einer Nennung im Datensatz.
+:::
+:::
+
+### Kategorie Sonstige
+
+Mit etwas mehr als 2,5% des gesamten Datensatzes ist die Kategorie Sonstige die dritthäufigste. Diese Kategorie ist gemäss der ORCID-Definition sehr weit gefasst. Sie beinhaltet wissenschaftliche Arbeiten wie Kommentare, Datensätze, Erfindungen, künstlerische Darbietungen und auch eine Art von Arbeit, die ebenfalls als «Sonstige» bezeichnet wird.
+
+Betrachtet man die einzelnen Arbeitsarten, so zeigen sich einige interessante Unterschiede zwischen den Forschungsbereichen. Zum Beispiel machen Software-Beiträge in MINT einen relativ grossen Teil der Kategorie Sonstige aus, während Vorlesungen und Referate in den GSW eine grössere Rolle spielen. Es überrascht nicht, dass auch künstlerische Darbietungen in den GSW etwas häufiger vorkommen. In allen Bereichen ist die Arbeitsart «Sonstige» jedoch mit einem Anteil von 51,1% an der Kategorie Sonstige weitaus am stärksten vertreten.
+
+::: plot-box
+<div class="plot-title">Sonstige: Art der Arbeiten nach Forschungsbereich</div>
+```{r plot-desktop-8}
+#| out-width: "100%"
+#| fig-height: 6
+
+make_figure_8()
+
+```
+:::
+
+Welche Erkenntnisse können wir aus der Kategorie Sonstige gewinnen? Eine erste Analyse der Arbeitsbeispiele, die als Sonstige eingestuft wurden, zeigt eine grosse Bandbreite von Werken. Einige waren eindeutig falsch eingestuft (z.B. ein Konferenzbeitrag, der unter Sonstige aufgeführt wurde), während andere tatsächlich nicht in das jetzige System gepasst hätten (z.B. eine Kunstausstellung, ein Manuskript in der Vorbereitungsphase, eine Wissensaustauschplattform, ein Podcast). Die Analyse dieser Beispiele ermöglicht es uns, die vorhandene Bandbreite an Ergebnissen wissenschaftlicher Forschung zu verstehen.
+
+### Umsetzung der DORA-Deklaration in die Praxis
+
+Vor zehn Jahren (2014) unterzeichnete der SNF die DORA-Deklaration. Das neue CV-Format ist eine wichtige Massnahme, um diese umzusetzen. Mit ihm können wir die Forschungslaufbahn der Gesuchstellenden fairer und transparenter bewerten und eine breite Palette von Forschungsoutputs anerkennen. 
+
+Insgesamt deuten unsere Daten darauf hin, dass die Forschenden von diesen Möglichkeiten Gebrauch machen. 3724 Lebensläufe (29%) enthalten mindestens ein Arbeitsbeispiel aus einer anderen Kategorie als «Publikation». Die Kategorie «Sonstige» wird von den Gesuchstellenden genutzt, um vielfältige Forschungsoutputs anzugeben. Diese werden wir mit grossem Interesse weiter verfolgen. 
+
+Für den SNF ist klar: Indem wir vielfältige Forschungsarbeiten berücksichtigen, tragen wir wesentlich zu einem möglichst fairen und transparenten Evaluationsverfahren bei.
+
+::: info-box
+
+### Weshalb sind neue Methoden zur Beurteilung der wissenschaftlichen Leistung notwendig?
+
+Der SNF hat den [Auftrag](https://www.fedlex.admin.ch/eli/cc/2013/786/de), «[exzellente Forschungsprojekte](https://www.snf.ch/de/tf8nnJBdUJPCYODl/thema/exzellenzmodell-des-snf)» zu fördern. Doch die Frage, was als exzellente Forschung gilt, ist nicht trivial. Trifft dies auf das Projekt der gesuchstellenden Person mit der beeindruckendsten Publikationsliste und dem grössten internationalen Netzwerk zu? Oder eher auf das Projekt mit den innovativsten Ideen? Oder aber auf das Projekt, das einen positiven Beitrag zur Gesellschaft leisten könnte?
+
+Indikatoren wie die Anzahl Zitationen, der h-Index oder Impact-Faktoren von wissenschaftlichen Zeitschriften werden manchmal verwendet, um die «Produktivität» und den «Einfluss» von Forschenden zu quantifizieren. Berücksichtigt man jedoch ausschliesslich solche quantitativen Indikatoren, kann dies ein enges Verständnis von Forschungserfolg und -exzellenz zementieren. Andere wichtige Aspekte der Forschungsarbeit werden nicht ausreichend gewürdigt. Dadurch können Fehlanreize entstehen und bestimmte Gruppen von Forschenden benachteiligt werden (z.B. Nachwuchsforschende oder Forschende mit einer nicht-traditionellen Laufbahn).
+
+Im Jahr 2012 wurde mit der [DORA-Deklaration](https://sfdora.org/read/read-the-declaration-deutsch/) (San Francisco Declaration on Research Assessment) die Notwendigkeit besserer Praktiken bei der Forschungsevaluation anerkannt. Die Förderorganisationen wurden aufgefordert, den Wert und die Wirkung aller Forschungsergebnisse zu berücksichtigen, nicht nur von Publikationen. Der SNF hat die Erklärung 2014 unterzeichnet und engagiert sich seither für diesen Ansatz. Bei der Evaluation von Gesuchen für Projekte in den Lebenswissenschaften im Jahr 2020 [haben wir das neue CV-Format erstmals getestet und bewertet](https://www.biorxiv.org/content/10.1101/2022.03.16.484596v1.full.pdf). Ab [2022 haben wir es schrittweise auf andere Förderinstrumente ausgeweitet](https://www.snf.ch/de/wBR6E3emu8PP1ZSY/news/neues-format-fuer-den-cv).
+
+:::
+
+::: info-box
+
+### Welche Daten wurden verwendet?
+
+Für diese Datengeschichte analysierten wir 12 655 standardisierte Lebensläufe von 9808 Gesuchstellenden und Mitgesuchstellenden (37,6% weiblich, 62,1% männlich, 0,4% nichtbinär). Die Analysen berücksichtigen Gesuche, die zwischen Oktober 2022 und Juli 2024 bei zahlreichen Förderinstrumenten in den Kategorien Projekte, Karrieren, Programme und Wissenschaftskommunikation eingereicht wurden. 31,4% der CV wurden bei den GSW eingereicht, 27,1% bei MINT, 31,5% bei den LW und 10% bei der ID. Sechs Lebensläufe wurden aufgrund von Dateninkonsistenzen von der Analyse ausgeschlossen. 
+
+Zu beachten ist, dass viele Forschende mehrere Gesuche mit jeweils verschiedenen CV einreichten (insgesamt 2216 Gesuchstellende hatten zwei oder mehr CV). Andere wiederum verwendeten denselben Lebenslauf für mehrere Gesuche (insgesamt 175 CV wurden für mehr als ein Gesuch verwendet). Daher enthält der Datensatz mehr Lebensläufe als Gesuchstellende.
+
+:::
+
+Daten, Text und Code dieser Datengeschichte sind [auf Github verfügbar](`r params$github_url`) und [auf Zenodo archiviert](`r params$doi_url`). <br>DOI: `r str_remove(params$doi_url,"https://doi.org/")`
+
+```{r prevent-internal-snsf-packages, include=FALSE}
+#| include: false
+
+# Internal SNSF packages must not be used in data stories, as their
+# pre-processing functions are internal and the corporate design differs from
+# the data portal.
+
+internal_pkg <- c("snfverse", "snf.preprocessing", "snf.plot")
+
+if (any(internal_pkg %in% loadedNamespaces())) {
+  stop(glue(
+    "You must not use internal SNSF packages in data stories.",
+    " Please resort to snf.datastory."
+  ))
+}
+```

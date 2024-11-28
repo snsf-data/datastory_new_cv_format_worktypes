@@ -1,0 +1,303 @@
+---
+title: "`r params$title`"
+format:
+  html:
+    toc: false
+    css: ["style.css"]
+    mainfont: Theinhardt
+    fontsize: "16px"
+    embed-resources: true
+    page-layout: custom
+    link-external-newwindow: true
+    footnotes-hover: true
+    fig-align: center
+    fig-format: retina
+    fig-dpi: 300
+language:
+  section-title-footnotes: "Notes de bas de page"
+params:
+  title: "Nouveau CV : qu’en est-il dans la pratique ?"
+  lead: "Le nouveau format de CV standardisé du FNS permet aux requérant·es de mettre en relief divers types de travaux et de réalisations. Comment la communauté scientifique s’en sert-elle dans la pratique ?"
+  publication_date: "2024-11-28 04:00:00"
+  lang: fr
+  use_theinhardt: false
+  reg_font_path: ""
+  bold_font_path: ""
+  it_font_path: ""
+  boldit_font_path: ""
+  doi_url: "https://doi.org/10.46446/datastory.new-cv-format-worktypes"
+  github_url: "https://github.com/snsf-data/datastory_new_cv_format_worktypes"
+execute:
+  echo: false
+  warning: false
+  message: false
+editor_options:
+  chunk_output_type: console
+---
+
+```{r general-setup}
+#| include: false
+
+# Install snf.datastory package if not available, otherwise load it
+if (!require("snf.datastory")) {
+  if (!require("devtools")) {
+    install.packages("devtools")
+    library(devtools)
+  }
+  install_github("snsf-data/snf.datastory")
+  library(snf.datastory)
+}
+
+# Load packages
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(conflicted)
+library(here)
+library(showtext)
+library(systemfonts)
+library(waffle)
+library(cowplot)
+
+# Conflict preferences
+conflict_prefer("filter", "dplyr")
+conflict_prefer("get_datastory_theme", "snf.datastory")
+conflict_prefer("get_datastory_scheme", "snf.datastory")
+
+source("R/read_and_prepare_data.R")
+source("R/make_figures.R")
+source("R/translations.R")
+
+# Need if we want to use the registered font in ggiraph plots
+showtext_auto()
+
+# Increase showtext package font resolution
+showtext_opts(dpi = 300 * 2)
+
+# Set the locale for date formatting (Windows)
+Sys.setlocale(
+  "LC_TIME",
+  switch(
+    params$lang,
+    en = "English",
+    de = "German",
+    fr = "French"
+  )
+)
+
+# Create function to print number with local language-specific format
+print_num <- function(x) snf.datastory::print_num(x, lang = params$lang)
+
+# Knitr hook for local formatting of printed numbers
+knitr::knit_hooks$set(
+  inline = function(x) {
+    if (!is.numeric(x)) {
+      x
+    } else {
+      print_num(x)
+    }
+  }
+)
+
+```
+
+```{r print-header-infos}
+#| results: asis
+
+# Add publication date to header
+cat(format(as.Date(params$publication_date), "%d.%m.%Y"))
+```
+
+**`r params$lead`**
+
+Lorsque le FNS a introduit le nouveau format de CV standardisé en 2022, son objectif était de conférer plus de transparence et d’équité au processus d’évaluation scientifique. En effet, du fait de l’absence de standardisation, les CV soumis par le passé se sont révélés hétérogènes tant dans leur forme que leur contenu, rendant difficile une évaluation totalement juste et efficace. Les requérant·es ayant été invités à lister l’ensemble de leurs résultats de recherche sur les cinq dernières années, leur productivité et la quantité de leurs résultats de recherche avaient tendance à recevoir une attention disproportionnée. Par ailleurs, ces listes consistaient souvent en une énumération extensive de publications, alors qu’en réalité, les résultats de la recherche scientifique sont beaucoup plus diversifiés (voir aussi l’encadré « Pourquoi avons-nous besoin de nouveaux moyens pour évaluer l’expérience scientifique ? »).
+
+### Le nouveau CV en bref
+
+Le nouveau format de CV, fondé sur une approche mixte, combine la présentation de contributions scientifiques sous forme de brefs récits avec un nombre limité de résultats de recherche. Les chercheurs et chercheuses peuvent ainsi replacer leurs travaux dans leur contexte et donner de la visibilité à des aspects de leur travail qui se trouveraient éclipsés dans des formats de CV plus traditionnels. Les demandes de subside doivent désormais comprendre une description de trois *prestations principales* au maximum, illustrées par une sélection pouvant aller jusqu’à dix *travaux scientifiques*. Notons que dans ce contexte, le terme « travaux » doit être entendu au sens large, c.-à-d. qu’il n’inclut pas uniquement des publications, mais aussi des articles de journaux, des brevets, des ensembles de données ou des performances artistiques.
+
+::: plot-box
+<div class="plot-title">Particularités du nouveau CV</div>
+```{r plot-desktop-1}
+#| out-width: "100%"
+#| fig-height: 3
+
+make_figure_1()
+
+```
+:::
+
+### Évaluer la manière dont les requérant·es utilisent le nouveau CV
+
+Dans ce récit de données – le premier d’une série de contributions explorant le contenu des nouveaux CV standardisés du FNS –, nous allons nous pencher sur les différents *types de travaux* que les chercheurs et chercheuses ont listés dans leur CV. Cette analyse porte sur 12 655 CV soumis dans le cadre des principaux instruments de financement du FNS entre octobre 2022 et juillet 2024 (voir aussi l’encadré « Quelles données avons-nous utilisées »). Les CV pris en compte sont issus de l’ensemble des domaines de recherche : sciences humaines et sociales (SHS), mathématiques, sciences naturelles et ingénierie (MINT), sciences de la vie (SV) et recherche interdisciplinaire (RI)[^2].
+
+[^2]: Jusqu’en avril 2023, les requêtes RI étaient soumises au système de financement Sinergia. Depuis juin 2023, Sinergia [a été intégré au financement de projets](https://www.snf.ch/fr/sEF1Lm4CUyA7qjR7/news/encouragement-de-projets-une-place-pour-les-projets-collaboratifs-et-interdisciplinaires) et les projets de RI sont évalués par des panels interdisciplinaires. Pour ce récit de données, RI inclut donc toutes les requêtes Sinergia ainsi que toutes les requêtes de financement de projet qui ont été soumises après juin 2023 et évaluées par un panel interdisciplinaire. La recherche interdisciplinaire est également soutenue par de nombreux autres instruments de financement du FNS, mais dans ce récit de données, ces requêtes sont classées en fonction de leurs disciplines principales telles que définies par leurs requérants.
+
+### Les requérant·es énumèrent un maximum de prestations et de travaux
+
+Le CV de type narratif est structuré de manière à permettre aux requérant·es de décrire une à trois *prestations majeures* et de les illustrer par dix *travaux de référence* au maximum. L’utilisation de ce format semble faire consensus dans tous les domaines : la majorité des CV contenait trois prestations principales (SHS : 86,7 %, MINT : 87,9 %, SV : 82,5 %, RI : 88,1 %) ainsi que dix travaux (SHS : 59,1 %, MINT : 58,3 %, SV : 62 %, RI : 74,5 %).
+
+::: plot-box
+<div class="plot-title">Nombre d’exemples de travaux par CV</div>
+```{r plot-desktop-2}
+#| out-width: "100%"
+#| fig-height: 3.75
+
+make_figure_2()
+
+```
+:::
+
+### Travaux de référence : abondance de publications malgré une diversité accrue
+
+Lorsqu’ils rédigent leur CV, les requérant·es peuvent importer des travaux de référence directement à partir de leur profil [ORCID](https://orcid.org/). Pour faciliter cette intégration, le nouveau format de CV calque sa classification sur celle des [types de travaux pris en charge par ORCID](https://info.orcid.org/fr/ufaqs/what-work-types-does-orcid-support/). Au total, il existe ainsi 45 *types de travaux* différents, organisés en quatre *catégories*[^3].
+
+[^3]: La catégorie « Publications » est assez large selon la classification ORCID ; voir la section « Différents domaines de recherche utilisent différents types de publication ».
+
+::: plot-box
+<div class="plot-title">Les types de travaux dans la classification ORCID</div>
+```{r plot-desktop-3}
+#| out-width: "100%"
+#| fig-height: 3
+
+make_figure_3()
+
+```
+::: caption
+La classification ORCID structure et organise les types de travaux en quatre catégories : « Publications », « Conférences », « Propriété intellectuelle » et « Autre ». Chaque catégorie est elle-même subdivisée en différents types de travaux. Ainsi, la catégorie « Publications » contient par exemple les types de travaux « Prépublication » et « Livre »). Pour des raisons de lisibilité, la classification ORCID, disponible en anglais, a été traduite en français.
+:::
+:::
+
+Si certain·es requérant·es ont décidé de ne faire figurer qu’un seul type de travail sur leur CV (39,6 %), nombreuses sont les personnes dont le CV présentait une grande diversité en la matière. Pour plusieurs d’entre elles, on a recensé sept types de travaux, voire davantage (n = 106 sur l’ensemble des 12 655 CV analysés).
+
+L’examen de la répartition des différentes catégories de travaux révèle que les « Publications » sont clairement majoritaires dans tous les domaines de recherche. Elles représentent 89,6 % des travaux référencés dans les CV en SHS, 87 % en MINT, 96 % en SV et 92,5 % en RI. Viennent ensuite les « Contributions lors de conférences », notamment dans le domaine MINT, qui représentent 9,9 % des travaux (SHS : 5,9 % ; SV : 1,9 % ; RI : 5,4 %). Les catégories « Propriété intellectuelle » et « Autre » sont beaucoup moins représentées (respectivement 0,6 % et 2,5 % de l’ensemble des domaines de recherche).
+
+::: plot-box
+<div class="plot-title">Pourcentage des catégories de travaux par domaine de recherche</div>
+```{r plot-desktop-4}
+#| out-width: "100%"
+#| fig-height: 4.75
+
+make_figure_4()
+
+```
+:::
+
+### Plusieurs domaines de recherche font appel à différents types de publications
+
+Pour mieux comprendre la catégorie « Publications », nous avons voulu examiner de plus près les types de publications les plus souvent référencés dans les CV. Dans la structure ORCID, la catégorie « Publications » est très vaste : elle va, entre autres, des publications dans des revues spécialisées aux entrées d’encyclopédie en passant par les critiques de livre et la rédaction de manuels. Pour simplifier l’analyse, nous avons regroupé ces types de travaux en *sous-catégories :*
+
+- *Revues* : articles dans des revues spécialisées, numéros de revues
+- *Livres* : livres, chapitres, critiques de livres, livres édités
+- *Dissertations* : dissertation, thèse, 
+- *En ligne* : ressource en ligne, site web
+- *Formation et supervision* : tests, publication étudiante supervisée
+- *Autres types d’articles* : article de magazine, article de bulletin d’information, évaluation, document de travail, rapport
+- *Outils textuels* : manuel, outil de recherche, traduction, entrées de dictionnaires et d’encyclopédies
+- *Prépublications*
+
+::: plot-box
+<div class="plot-title">Types de travaux dans la catégorie « Publications » par domaine de recherche</div>
+```{r plot-desktop-5}
+#| out-width: "100%"
+#| fig-height: 6.25
+
+make_figure_5()
+
+```
+:::
+
+L’examen de ces sous-catégories des « Publications » révèle des différences notables selon les domaines de recherche. Tandis que les publications dans des *revues* sont le type de travail le plus répandu dans tous les domaines de recherche, elles représentent une proportion plus faible des publications en SHS (60 %) par rapport aux autres domaines (MINT : 89,4 % ; LS : 93,3 % ; ID : 89,7 %). En revanche, les publications de *livres* sont plus fréquemment référencées dans les CV du domaine SHS (26,5 %) que dans les CV des autres domaines de recherche (MINT : 2,7 % ; LS : 1,6 % ; ID : 5,9 %). Les sciences humaines et sociales présentent également une proportion relativement élevée d’*autres types d’articles*, soit 5,8 % de tous les travaux de la catégorie « Publications ». Dans le domaine SHS, les rapports (672), les documents de travail (499) et les articles de magazines (304) sont les publications les plus représentées de cette sous-catégorie. Les prépublications semblent plus répandues dans les domaines MINT (3,2 %) et SV (1,9 %) que dans les domaines SHS (0,9 %) et RI (0,9 %).
+
+### Contributions lors de conférences
+
+Quel que soit le domaine de recherche, les contributions lors de conférences sont la deuxième catégorie de travaux la plus fréquemment citée. Pour RI, MINT et SHS, les articles de conférence sont le principal type de travail dans cette catégorie, avec plus de 73 % du total des contributions lors de conférences dans chacun de ces domaines de recherche. Pour SV, les résumés de conférence sont le type de travail référencé le plus souvent (40,8 %), mais les articles de conférence suivent de près (38 %). C’est aussi dans le domaine SV que la plus grande proportion de posters a été répertoriée.
+
+::: plot-box
+<div class="plot-title">Types de travaux dans la catégorie « Conférences » par domaine de recherche</div>
+```{r plot-desktop-6}
+#| out-width: "100%"
+#| fig-height: 5.5
+
+make_figure_6()
+
+```
+:::
+
+### Propriété intellectuelle
+
+Dans l’ensemble, la catégorie « Propriété intellectuelle » apparaît bien moins souvent dans les CV que les « Publications » et les « Conférences ». Dans cette catégorie, les brevets sont de loin le type de travail le plus répandu, avec au moins 90 % des contributions dans chaque domaine de recherche. Les divulgations, les droits d’auteur enregistrés, les licences et les marques déposées ne sont que très rarement mentionnés dans l’ensemble des CV analysés.
+
+::: plot-box
+<div class="plot-title">Types de travaux dans la catégorie « Propriété intellectuelle » par domaine de recherche</div>
+```{r plot-desktop-7}
+#| out-width: "100%"
+#| fig-height: 5.5
+
+make_figure_7()
+
+```
+::: caption
+Chaque carré correspond à une occurrence dans l’ensemble des CV analysés.
+:::
+:::
+
+### Un examen plus approfondi de la catégorie « Autre »
+
+Avec plus de 2,5 % dans l’ensemble de données analysé, les contributions labellisées « Autre » constituent la troisième catégorie la plus répandue. Également à très vaste portée au sein de la structure ORCID, elle comprend des types de travaux tels que les annotations, les ensembles de données, les inventions, les performances artistiques, ainsi qu’un type de travail lui-même dénommé « Autre ». L’examen de la répartition des types de travaux au sein de cette catégorie met en relief des différences intéressantes entre les domaines de recherche. Par exemple, les contributions aux logiciels représentent une part assez importante dans le domaine MINT, tandis que les conférences et les exposés représentent une proportion relativement importante des contributions dans le domaine SSH. Il n’est, en outre, pas surprenant que les performances artistiques soient un peu plus présentes en sciences humaines et sociales que dans les autres domaines de recherche. Cependant, dans tous les domaines de recherche, le type de travail Autre est de loin le plus fréquent, représentant plus de 51,1 % des travaux de référence dans la catégorie « Autre ».
+
+::: plot-box
+<div class="plot-title">Types de travaux dans la catégorie « Autre »</div>
+```{r plot-desktop-8}
+#| out-width: "100%"
+#| fig-height: 6
+
+make_figure_8()
+
+```
+:::
+
+En quoi consiste le type de travail « Autre » ? Les analyses préliminaires des travaux classés comme tels révèlent un ensemble assez hétéroclite de types de travaux. Certains étaient manifestement répartis de façon erronée (p. ex. un papier de conférence dans le type « Autre »), tandis que d’autres étaient effectivement inclassifiables dans le système existant (p. ex. une exposition d’art, un manuscrit en préparation, une plateforme d’échange de connaissances, un podcast). L’analyse de ces travaux référencés nous permet de comprendre l’étendue réelle des contributions de la recherche.
+
+### Mettre en pratique la déclaration DORA avec le nouveau CV
+
+L’année 2024 marque le dixième anniversaire de la signature de la déclaration DORA par le FNS. Le nouveau format de CV est l’une des mesures prises par le FNS pour conférer plus de transparence et d’équité au processus d’évaluation des carrières de recherche des requérant·es et pour permettre une évaluation prenant en compte le large éventail de contributions de recherche différentes. Dans l’ensemble, nos données suggèrent que les chercheurs et chercheuses mettent à profit ces possibilités : au total, 3724 CV (29 % de l’ensemble des CV) font référence à au moins une catégorie de travail autre que « Publications ». Les requérant·es de subsides se servent également de la catégorie « Autre» pour mettre en évidence une grande variété de contributions de recherche, une approche que le FNS entend suivre avec beaucoup d’intérêt. Le FNS considère la diversité des types de travaux comme un aspect important de l’équité et de la transparence de l’évaluation de la recherche.
+
+::: info-box
+
+### Pourquoi avons-nous besoin de nouveaux moyens pour évaluer l’expérience scientifique ?
+
+Le [mandat](https://www.fedlex.admin.ch/eli/cc/2013/786/fr) du FNS est de financer des « [projets de recherche d’excellence](https://www.snf.ch/fr/tf8nnJBdUJPCYODl/dossier/modele-dexcellence-du-fns) » – mais déterminer quelle recherche est « excellente » est loin d’être trivial. S’agit-il du projet dont le requérant présente le parcours le plus prolifique et justifie du réseau international le plus étendu ? Ou celui dont la requérante développe les idées les plus novatrices ? Ou est-ce encore le projet susceptible de générer un impact positif sur la société ?
+
+Des indicateurs tels que le nombre de citations, les indices h et les facteurs d’impact des revues sont parfois utilisés pour quantifier la « productivité » et l’« impact » d’un·e scientifique. Toutefois, le fait de s’appuyer exclusivement sur ce type d’indicateurs quantitatifs peut perpétuer une conception étroite de la réussite et de l’excellence de la recherche et occulter d’autres aspects valorisants du travail de recherche, avec pour conséquence des incitations négatives et des désavantages pour certains groupes de chercheurs ou chercheuses (p. ex. les chercheurs et chercheuses en début de carrière ou ayant une carrière non traditionnelle).
+
+En 2012, la [Déclaration sur l’évaluation de la recherche (DORA)](https://sfdora.org/read/read-the-declaration-french/) a promu la nécessité de meilleures pratiques en matière d’évaluation de la recherche, appelant les agences de financement à « tenir compte de la valeur et de l’impact de toutes les contributions à la recherche […] en plus des publications de recherche. » En tant que signataire, le FNS s’est engagé sur cette voie depuis 2014. [Le nouveau format de CV a d’abord été contrôlé et évalué](https://www.biorxiv.org/content/10.1101/2022.03.16.484596v1.full.pdf) dans le cadre de l’évaluation des requêtes d’encouragement de projets dans le domaine des sciences de la vie en 2020, avant d’[être progressivement étendu à d’autres instruments de financement à partir de 2022](https://www.snf.ch/fr/wBR6E3emu8PP1ZSY/news/un-nouveau-cv).
+
+:::
+
+::: info-box
+
+### Quelles données avons-nous utilisées ?
+
+Pour ce récit de données, nous avons analysé 12 655 CV standardisés de 9808 requérant·es principaux et co-requérant·es (37,6 % de femmes, 62,1 % d’hommes, 0,4 % de non-binaires). Les analyses portent sur les demandes ayant trait aux nombreux instruments de financement de projets, de carrières, de programmes et de la communication scientifique, déposées sur une période allant d’octobre 2022 à juillet 2024. 31,4% des CV soumis provenaient du domaine SHS, 27,1% du domaine MINT, 31,5% du domaine LS et 10% du domaine RI. Six CV ont été exclus de l’analyse en raison d’incohérences dans les données. Il convient de noter que certain·es scientifiques ont soumis plusieurs requêtes avec un CV distinct pour chaque requête (au total, 2216 requérant·es avaient deux CV ou plus), tandis que d’autres ont réutilisé le même CV pour plusieurs requêtes (au total, 175 CV ont été utilisés pour plus d’une requête), de sorte qu’il y a plus de CV que de requérant·es dans l’ensemble de données analysé.
+
+:::
+
+Les données, le texte et le code de ce récit de données sont [disponibles sur Github](`r params$github_url`) et [archivés sur Zenodo](`r params$doi_url`). <br>DOI: `r str_remove(params$doi_url, "https://doi.org/")`
+
+```{r prevent-internal-snsf-packages, include=FALSE}
+#| include: false
+
+# Internal SNSF packages must not be used in data stories, as their
+# pre-processing functions are internal and the corporate design differs from
+# the data portal.
+
+internal_pkg <- c("snfverse", "snf.preprocessing", "snf.plot")
+
+if (any(internal_pkg %in% loadedNamespaces())) {
+  stop(glue(
+    "You must not use internal SNSF packages in data stories.",
+    " Please resort to snf.datastory."
+  ))
+}
+```
